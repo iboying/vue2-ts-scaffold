@@ -1,0 +1,34 @@
+{
+  "Print to console": {
+    "prefix": "tsvue",
+    "description": "Basic vue typescript template",
+    "body": [
+      "<script lang=\"ts\">",
+      "import { Component, Vue, Prop } from 'vue-property-decorator';",
+      "",
+      "@Component({",
+      "  components: {},",
+      "})",
+      "export default class componentName extends Vue {",
+      "  @Prop({ type: String, default: '' }) prop!: string;",
+      "",
+      "  state: string = '';",
+      "",
+      "  mounted() {",
+      "    this.fetchData();",
+      "  }",
+      "",
+      "  fetchData() {}",
+      "}",
+      "</script>",
+      "",
+      "<template lang=\"pug\">",
+      ".container",
+      "  | component",
+      "</template>",
+      "",
+      "<style lang=\"stylus\" scoped></style>",
+      ""
+    ]
+  }
+}

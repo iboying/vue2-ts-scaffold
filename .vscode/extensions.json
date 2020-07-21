@@ -1,0 +1,14 @@
+{
+  "recommendations": [
+    "octref.vetur",
+    "esbenp.prettier-vscode",
+    "dbaeumer.vscode-eslint",
+    "thisismanta.stylus-supremacy",
+    "formulahendry.auto-close-tag",
+    "christian-kohler.path-intellisense",
+    "sysoev.language-stylus",
+    "thisismanta.stylus-supremacy",
+    "streetsidesoftware.code-spell-checker",
+    "eamodio.gitlens"
+  ]
+}

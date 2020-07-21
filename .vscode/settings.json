@@ -1,0 +1,53 @@
+{
+  "emmet.syntaxProfiles": {
+    "vue-html": "html",
+    "vue": "html"
+  },
+  // lint
+  "eslint.enable": true,
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "vue",
+    "typescript",
+    "typescriptreact"
+  ],
+  "eslint.options": {
+    "extensions": [".js", ".vue", ".ts", ".tsx", ".jsx"]
+  },
+  "eslint.packageManager": "yarn",
+  // format
+  "editor.formatOnSave": true,
+  "[typescript]": {
+    "editor.formatOnSave": false
+  },
+  "[javascript]": {
+    "editor.formatOnSave": false
+  },
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true,
+    "source.organizeImports": false
+  },
+  "javascript.format.enable": false,
+  "typescript.format.enable": false,
+  "vetur.format.defaultFormatter.js": "none",
+  "vetur.format.defaultFormatter.ts": "none",
+  "vetur.format.defaultFormatter.html": "none",
+  // editor
+  "editor.tabSize": 2,
+  "editor.rulers": [120],
+  // files
+  "files.eol": "\n",
+  "files.insertFinalNewline": true,
+  "files.associations": {
+    "*.vue": "vue"
+  },
+  // css
+  "stylusSupremacy.insertColons": false,
+  "stylusSupremacy.insertBraces": false,
+  "stylusSupremacy.insertSemicolons": false,
+  "stylusSupremacy.insertNewLineAroundBlocks": "root",
+  "stylusSupremacy.insertNewLineAroundOthers": "root",
+  "stylusSupremacy.insertNewLineAroundImports": "nested",
+  "stylusSupremacy.sortProperties": "grouped"
+}

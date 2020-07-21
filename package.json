@@ -9,15 +9,24 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
+    "axios": "^0.19.2",
+    "change-case": "^4.1.1",
     "core-js": "^3.6.5",
+    "lodash-es": "^4.17.15",
+    "pluralize": "^8.0.0",
+    "qs": "^6.9.4",
     "vue": "^2.6.11",
     "vue-class-component": "^7.2.3",
     "vue-property-decorator": "^8.4.2",
     "vue-router": "^3.2.0",
-    "vuex": "^3.4.0"
+    "vuex": "^3.4.0",
+    "vuex-module-decorators": "^0.17.0"
   },
   "devDependencies": {
     "@types/jest": "^24.0.19",
+    "@types/lodash-es": "^4.17.3",
+    "@types/pluralize": "^0.0.29",
+    "@types/qs": "^6.9.3",
     "@typescript-eslint/eslint-plugin": "^2.33.0",
     "@typescript-eslint/parser": "^2.33.0",
     "@vue/cli-plugin-babel": "~4.4.0",
@@ -54,7 +63,10 @@
     "parserOptions": {
       "ecmaVersion": 2020
     },
-    "rules": {},
+    "rules": {
+      "@typescript-eslint/no-explicit-any": 0,
+      "@typescript-eslint/interface-name-prefix": 0
+    },
     "overrides": [
       {
         "files": [
@@ -66,6 +78,12 @@
         }
       }
     ]
+  },
+  "prettier": {
+    "printWidth": 100,
+    "singleQuote": true,
+    "proseWrap": "always",
+    "trailingComma": "all"
   },
   "browserslist": [
     "> 1%",
