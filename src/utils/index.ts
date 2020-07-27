@@ -63,7 +63,7 @@ export default {
   deepCopy(obj: object) {
     return fp.cloneDeep(obj);
   },
-  debounce(fn: (...args: any) => void, wait: number = 100, immediate: boolean = false) {
+  debounce(fn: (...args: any) => void, wait = 100, immediate = false) {
     let timer: any = null;
     return (...args: any) => {
       if (timer) {
@@ -87,7 +87,7 @@ export default {
       .replace(/\s{2,}/g, ' ');
     return formatString.split(' ');
   },
-  open(path: string, target: string = '_blank') {
+  open(path: string, target = '_blank') {
     const publicPath = process.env.VUE_APP_PUBLIC_PATH || '';
     if (path.includes('http') || path.includes(publicPath)) {
       window.open(path, target);

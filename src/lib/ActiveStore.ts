@@ -44,6 +44,35 @@ interface ModuleOptions {
   namespaced?: boolean;
 }
 
+function diffAttributes(originAttributeObjects: IObject[], currentAttributeObjects: IObject[]) {
+  const originAttributeObjectIds = originAttributeObjects.map((o: any) => o.id);
+  const currentAttributeObjectIds = currentAttributeObjects.map((o: any) => o.id);
+  const newObjects = currentAttributeObjects.filter(
+    (o: any) => !originAttributeObjectIds.includes(o.id),
+  );
+  const deleteObjects = originAttributeObjects
+    .filter((o: any) => !currentAttributeObjectIds.includes(o.id))
+    .map((o: any) => ({
+      ...o,
+      _destroy: o.id,
+    }));
+  return newObjects.concat(deleteObjects);
+}
+
+function getDiffResourceAttributes(record: IObject) {
+  const attributesKeys = Object.keys(record).filter((key: string) => key.includes('_attributes'));
+  return attributesKeys.reduce((obj, key) => {
+    const keyValue =
+      record[key] instanceof Array
+        ? diffAttributes(record[key.split('_attributes').shift() || ''] || [], record[key])
+        : record[key];
+    return {
+      ...obj,
+      [key]: keyValue,
+    };
+  }, {});
+}
+
 export class ActiveStore<IModel extends ModelRequired = ModelRequired> extends VuexModule {
   private ActiveModel: any = null;
   model: IActiveModel = new ActiveModel();
@@ -319,32 +348,3 @@ export function ActiveModule(ModelClass: ConstructorOf<ActiveModel>, options: Mo
 }
 
 export const getModule = getMod;
-
-function diffAttributes(originAttributeObjects: IObject[], currentAttributeObjects: IObject[]) {
-  const originAttributeObjectIds = originAttributeObjects.map((o: any) => o.id);
-  const currentAttributeObjectIds = currentAttributeObjects.map((o: any) => o.id);
-  const newObjects = currentAttributeObjects.filter(
-    (o: any) => !originAttributeObjectIds.includes(o.id),
-  );
-  const deleteObjects = originAttributeObjects
-    .filter((o: any) => !currentAttributeObjectIds.includes(o.id))
-    .map((o: any) => ({
-      ...o,
-      _destroy: o.id,
-    }));
-  return newObjects.concat(deleteObjects);
-}
-
-function getDiffResourceAttributes(record: IObject) {
-  const attributesKeys = Object.keys(record).filter((key: string) => key.includes('_attributes'));
-  return attributesKeys.reduce((obj, key) => {
-    const keyValue =
-      record[key] instanceof Array
-        ? diffAttributes(record[key.split('_attributes').shift() || ''] || [], record[key])
-        : record[key];
-    return {
-      ...obj,
-      [key]: keyValue,
-    };
-  }, {});
-}
