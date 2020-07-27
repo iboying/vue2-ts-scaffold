@@ -1,0 +1,29 @@
+image: chenkang0503/front-end-env:latest
+
+stages:
+  - install
+  - test
+
+install:
+  stage: install
+  tags:
+    - web
+  cache:
+    key: ${CI_PROJECT_ID}
+    paths:
+      - node_modules
+  script:
+    - yarn config set registry https://registry.npm.taobao.org
+    - yarn install
+
+test:
+  stage: test
+  tags:
+    - web
+  cache:
+    key: ${CI_PROJECT_ID}
+    policy: pull
+    paths:
+      - node_modules
+  script:
+    - yarn run lint
