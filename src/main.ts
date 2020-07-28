@@ -1,3 +1,5 @@
+import 'normalize.css';
+import '@/assets/styles/global.styl';
 import Vue from 'vue';
 import App from './App.vue';
 import router from './router';

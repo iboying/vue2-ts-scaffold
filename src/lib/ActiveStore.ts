@@ -285,7 +285,7 @@ export class ActiveStore<IModel extends IModelRequired = IModelRequired> extends
     this.formData = cloneDeep(payload);
   }
   @Mutation
-  public SET_PARAMS(this: any, payload: IObject) {
+  public SET_PARAMS(this: any, payload: IObject = {}) {
     this.currentPage = payload.page || this.currentPage;
     this.perPage = payload.per_page || this.perPage;
   }

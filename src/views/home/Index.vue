@@ -1,0 +1,33 @@
+<template lang="pug">
+  .home
+    img(alt="Vue logo" src="@/assets/images/logo.png")
+    HelloWorld(msg="Welcome to Your Vue.js App")
+</template>
+
+<script>
+import { Component, Vue } from 'vue-property-decorator';
+import { exampleStore } from '@/store/modules/example.store';
+import HelloWorld from '@/components/HelloWorld.vue';
+
+@Component({
+  components: {
+    HelloWorld,
+  },
+})
+export default class Home extends Vue {
+  mounted() {
+    exampleStore.init();
+    this.fetchData();
+  }
+
+  fetchData() {
+    exampleStore.index();
+  }
+}
+</script>
+
+<style lang="stylus" scoped>
+.container
+  background #ffffff
+  color #333333
+</style>

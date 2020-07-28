@@ -1,5 +1,5 @@
 import { ActiveModule, ActiveStore, getModule } from '@/lib/ActiveStore';
-import { Session, ISession } from '@/model/session';
+import { Session, ISession } from '@/models/session';
 import { getModulePersistState } from '@/store';
 
 const initialState = getModulePersistState('session');
