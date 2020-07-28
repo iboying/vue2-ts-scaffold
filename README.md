@@ -54,7 +54,7 @@ npm run format
 ## 五、路由配置
 
 - 项目页面按照 Restful resources 风格进行管理；
-- 每个资源设置自身的路由：`resources/route.ts`；
+- 每个资源设置自身的路由：`router/session.route.ts`；
 - `src/router.ts` 路由器内导入 resources route；
 
 ## 六、代码提交格式

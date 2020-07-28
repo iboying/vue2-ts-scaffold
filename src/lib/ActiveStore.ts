@@ -1,6 +1,8 @@
+import ActiveModel, { IActiveModel, IModelConfig, IParent } from '@/lib/ActiveModel';
 import store from '@/store';
 import diff from '@/utils/diff';
-import { cloneDeep } from 'lodash-es';
+import { AxiosRequestConfig } from 'axios';
+import { cloneDeep } from 'lodash/fp';
 import {
   Action,
   config,
@@ -9,25 +11,23 @@ import {
   Mutation,
   VuexModule,
 } from 'vuex-module-decorators';
-import ActiveModel, { IActiveModel, IModelConfig, IParent } from '@/lib/ActiveModel';
-import { AxiosRequestConfig } from 'axios';
 
 config.rawError = true;
 
-interface ModelRequired {
+interface IModelRequired {
   id?: number | string | null | undefined;
   noCompare?: boolean;
 }
-interface Params {
+interface IParams {
   shouldAppend?: boolean; // 是否追加元素，而不是整页替换
   [key: string]: any;
 }
-interface CollectionPayload {
+interface ICollectionPayload {
   action: string;
   config?: AxiosRequestConfig;
 }
 
-interface MemberPayload {
+interface IMemberPayload {
   action: string;
   id: number | string;
   config?: AxiosRequestConfig;
@@ -42,6 +42,12 @@ interface ModuleOptions {
   store?: any;
   dynamic?: boolean;
   namespaced?: boolean;
+}
+
+function checkInit(model: IActiveModel) {
+  if (Object.getPrototypeOf(model).constructor === ActiveModel) {
+    throw new Error('\n\n 请确保 store.init 方法执行之后，再调用其他接口方法。\n');
+  }
 }
 
 function diffAttributes(originAttributeObjects: IObject[], currentAttributeObjects: IObject[]) {
@@ -73,7 +79,7 @@ function getDiffResourceAttributes(record: IObject) {
   }, {});
 }
 
-export class ActiveStore<IModel extends ModelRequired = ModelRequired> extends VuexModule {
+export class ActiveStore<IModel extends IModelRequired = IModelRequired> extends VuexModule {
   private ActiveModel: any = null;
   model: IActiveModel = new ActiveModel();
   // data
@@ -93,7 +99,7 @@ export class ActiveStore<IModel extends ModelRequired = ModelRequired> extends V
   init(modelOrConfig?: IActiveModel | IModelConfig) {
     const ModelClass = this.ActiveModel;
     if (!ModelClass) {
-      throw new Error('Error: 请使用 init 方法初始化 store. 确保 store 在声明时已关联模型.');
+      throw new Error('\n\n 请使用 init 方法初始化 store. 确保 store 在声明时已关联模型。\n');
     }
     if (modelOrConfig) {
       if (modelOrConfig instanceof ModelClass) {
@@ -108,8 +114,9 @@ export class ActiveStore<IModel extends ModelRequired = ModelRequired> extends V
 
   // =============== actions ===============
   @Action({})
-  async index(params?: Params) {
+  async index(params?: IParams) {
     try {
+      checkInit(this.model);
       this.context.commit('SET_LOADING', true);
       this.context.commit('SET_PARAMS', params);
       const { data } = await this.model.index({
@@ -133,6 +140,7 @@ export class ActiveStore<IModel extends ModelRequired = ModelRequired> extends V
   @Action({})
   async find(id?: number | string) {
     try {
+      checkInit(this.model);
       this.context.commit('SET_LOADING', true);
       const res = await this.model.find(id);
       this.context.commit('SET_RECORD', res.data);
@@ -148,6 +156,7 @@ export class ActiveStore<IModel extends ModelRequired = ModelRequired> extends V
   @Action({})
   async create(formData: IModel) {
     try {
+      checkInit(this.model);
       this.context.commit('SET_LOADING', true);
       const { data } = await this.model.create(formData);
       this.context.commit('ADD_RECORD', data);
@@ -162,6 +171,7 @@ export class ActiveStore<IModel extends ModelRequired = ModelRequired> extends V
   @Action({})
   async update(formData: IModel) {
     try {
+      checkInit(this.model);
       this.context.commit('SET_LOADING', true);
       // Get origin record
       let originData: any = null;
@@ -196,6 +206,7 @@ export class ActiveStore<IModel extends ModelRequired = ModelRequired> extends V
   @Action({})
   async updateWithoutDiff(formData: IModel) {
     try {
+      checkInit(this.model);
       this.context.commit('SET_LOADING', true);
       await this.model.update(formData);
       this.context.commit('UPDATE_RECORD', formData);
@@ -209,6 +220,7 @@ export class ActiveStore<IModel extends ModelRequired = ModelRequired> extends V
   @Action({})
   async delete(id?: number | string) {
     try {
+      checkInit(this.model);
       this.context.commit('SET_LOADING', true);
       await this.model.delete(id);
       this.context.commit('DELETE_RECORD', id);
@@ -220,8 +232,9 @@ export class ActiveStore<IModel extends ModelRequired = ModelRequired> extends V
   }
 
   @Action({})
-  async sendCollectionAction(payload: CollectionPayload) {
+  async sendCollectionAction(payload: ICollectionPayload) {
     try {
+      checkInit(this.model);
       this.context.commit('SET_LOADING', true);
       const { action, config } = payload;
       const res = await this.model.sendCollectionAction(action, config);
@@ -234,8 +247,9 @@ export class ActiveStore<IModel extends ModelRequired = ModelRequired> extends V
   }
 
   @Action({})
-  async sendMemberAction(payload: MemberPayload) {
+  async sendMemberAction(payload: IMemberPayload) {
     try {
+      checkInit(this.model);
       this.context.commit('SET_LOADING', true);
       const { action, id, config } = payload;
       const res = await this.model.sendMemberAction(id, action, config);
@@ -252,11 +266,12 @@ export class ActiveStore<IModel extends ModelRequired = ModelRequired> extends V
     this.context.commit('SET_RECORD', {});
     this.context.commit('SET_FORM_DATA', {});
     this.context.commit('SET_LOADING', false);
+
     this.context.commit('SET_RECORDS', {
       current_page: 1,
       total_pages: 1,
       total_count: 0,
-      [this.model.indexKey || this.model.resource]: [],
+      [this.model.dataIndexKey || this.model.pathIndexKey]: [],
     });
   }
 
@@ -280,11 +295,8 @@ export class ActiveStore<IModel extends ModelRequired = ModelRequired> extends V
     this.totalPages = payload.total_pages || this.totalPages;
     this.totalCount =
       typeof payload.total_count === 'number' ? payload.total_count : this.totalCount;
-    const records = cloneDeep(payload[this.model.indexKey || this.model.resource] || this.records);
-    this.records = records.map((o: any, i: number) => ({
-      _index: i + 1,
-      ...o,
-    }));
+    const records = cloneDeep(payload[this.model.dataIndexKey] || this.records);
+    this.records = records.map((o: any, i: number) => ({ _index: i + 1, ...o }));
   }
   @Mutation
   public APPEND_RECORDS(this: any, payload: IObject) {
@@ -293,13 +305,11 @@ export class ActiveStore<IModel extends ModelRequired = ModelRequired> extends V
     this.totalCount =
       typeof payload.total_count === 'number' ? payload.total_count : this.totalCount;
     if (this.currentPage === 1) {
-      this.records = payload[this.model.indexKey || this.model.resource]
-        ? cloneDeep(payload[this.model.indexKey || this.model.resource])
+      this.records = payload[this.model.dataIndexKey]
+        ? cloneDeep(payload[this.model.dataIndexKey])
         : this.records;
     } else {
-      this.records = this.records.concat(
-        cloneDeep(payload[this.model.indexKey || this.model.resource] || []),
-      );
+      this.records = this.records.concat(cloneDeep(payload[this.model.dataIndexKey] || []));
     }
   }
   @Mutation
@@ -339,6 +349,10 @@ export class ActiveStore<IModel extends ModelRequired = ModelRequired> extends V
   }
 }
 
+// 用于获取 store 实例
+export const getModule = getMod;
+
+// Store 装饰器，为 Store 绑定 Model
 export function ActiveModule(ModelClass: ConstructorOf<ActiveModel>, options: ModuleOptions) {
   return (StoreClass: any) => {
     const decorator = Module(Object.assign({ store, dynamic: true, namespaced: true }, options));
@@ -346,5 +360,3 @@ export function ActiveModule(ModelClass: ConstructorOf<ActiveModel>, options: Mo
     StoreClass.state.ActiveModel = ModelClass;
   };
 }
-
-export const getModule = getMod;

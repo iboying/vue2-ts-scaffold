@@ -1,8 +1,8 @@
 import createRequestClient from '@/utils/request';
 import { AxiosInstance, AxiosRequestConfig } from 'axios';
 import { snakeCase } from 'change-case';
+import { isInteger, merge } from 'lodash';
 import { plural } from 'pluralize';
-import { isInteger, merge } from 'lodash-es';
 
 type IdType = number | string;
 type IObject = { [key: string]: any };
@@ -23,14 +23,12 @@ export interface IActiveModel {
   baseUrl: string;
   rootPath: string;
   namespace: string;
-  query?: object;
-  resource: string;
   name: string;
+  pathIndexKey: string;
+  dataIndexKey: string;
   parents: IParent[];
-  indexKey?: string;
   mode?: ModeType;
   params?: IObject;
-  indexPath: string;
   resourcePath: string;
   parentMap: { [key: string]: IParent };
   index(params: IObject, config?: AxiosRequestConfig): any;
@@ -45,9 +43,10 @@ export interface IActiveModel {
 export interface IModelConfig {
   baseUrl?: string;
   rootPath?: string; // 路由的命名空间
-  namespace?: string; // 路由的命名空间
-  resource?: string; // 资源名称，一般是模型名的复数形式
   name?: string; // 模型名称
+  namespace?: string; // 路由的命名空间
+  dataIndexKey?: string; // 资源名称，一般是模型名的复数形式
+  pathIndexKey?: string; //路由上的模型名复数形式
   parents?: IParent[]; // 关联父资源
   actions?: IAction[]; // 自定义接口方法
   mode?: ModeType; // default: Restful 默认模式， shallow: 对于后台 shallow: true, single: 单例模式
@@ -81,9 +80,9 @@ export default class ActiveModel<T extends IModel = IModel, IResponse = {}>
   public rootPath = '/';
 
   public namespace = '';
-  public resource = '';
   public name = '';
-  public indexKey = '';
+  public dataIndexKey = '';
+  public pathIndexKey = '';
   public parents: IParent[] = [];
   public actions: IAction[] = [];
   public mode: ModeType = 'default';
@@ -91,7 +90,19 @@ export default class ActiveModel<T extends IModel = IModel, IResponse = {}>
 
   constructor(config: IModelConfig = {}) {
     this.request = createRequestClient();
-    const { baseUrl, rootPath, name, namespace, resource, parents, actions, mode, params } = config;
+    const {
+      baseUrl,
+      rootPath,
+      name,
+      namespace,
+      dataIndexKey,
+      pathIndexKey,
+      parents,
+      actions,
+      mode,
+      params,
+    } = config;
+
     if (baseUrl) {
       this.request.defaults.baseURL = baseUrl;
     }
@@ -101,8 +112,8 @@ export default class ActiveModel<T extends IModel = IModel, IResponse = {}>
     this.namespace = namespace || this.namespace;
     const modelName = name || this.constructor.name;
     this.name = snakeCase(modelName);
-    this.resource = resource || plural(this.name);
-    this.indexKey = this.resource;
+    this.dataIndexKey = dataIndexKey || plural(this.name);
+    this.pathIndexKey = pathIndexKey || plural(this.name);
     this.parents = parents || [];
     this.actions = actions || [];
     this.mode = mode || 'default';
@@ -117,7 +128,7 @@ export default class ActiveModel<T extends IModel = IModel, IResponse = {}>
   }
 
   get resourcePath() {
-    return `${this.namespace}/${this.resource}`;
+    return `${this.namespace}/${this.pathIndexKey}`;
   }
 
   get indexPath() {
@@ -128,7 +139,7 @@ export default class ActiveModel<T extends IModel = IModel, IResponse = {}>
     if (this.mode === 'single') {
       return `${parentPath}/${this.name}`;
     }
-    return `${parentPath}/${this.resource}`;
+    return `${parentPath}/${this.pathIndexKey}`;
   }
 
   get memberActionMap() {
@@ -211,7 +222,7 @@ export default class ActiveModel<T extends IModel = IModel, IResponse = {}>
     const action: IAction = this.collectionActionMap[actionName];
 
     if (!action) {
-      throw new Error(`${actionName} on collection 接口不存在，请检查模型配置`);
+      throw new Error(`\n${actionName} on collection 接口不存在，请检查模型配置。\n`);
     }
     return this.request({
       method: action.method,
@@ -226,7 +237,7 @@ export default class ActiveModel<T extends IModel = IModel, IResponse = {}>
   public sendMemberAction(id: IdType, actionName: string, config?: AxiosRequestConfig) {
     const action: IAction = this.memberActionMap[actionName];
     if (!action) {
-      throw new Error(`${actionName} on member 接口不存在，请检查模型配置`);
+      throw new Error(`\n ${actionName} on member 接口不存在，请检查模型配置。\n`);
     }
     return this.request({
       method: action.method,

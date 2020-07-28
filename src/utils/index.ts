@@ -33,13 +33,6 @@ export default {
       return ret;
     }, {});
   },
-  // resolve async function one by one
-  promiseSerial(funcs: Array<Promise<any>>) {
-    const concat = (res: any) => Array.prototype.concat.bind(res);
-    const promiseConcat = (func: any) => (res: any) => func().then(concat(res));
-    const promiseReduce = (acc: any, func: any) => acc.then(promiseConcat(func));
-    funcs.reduce(promiseReduce, Promise.resolve([]));
-  },
   groupBy(array: any[], func: any) {
     return array.map(typeof func === 'function' ? func : val => val[func]).reduce(
       (group: any, val: any, index: number) => ({
@@ -57,26 +50,7 @@ export default {
       return obj;
     }, {});
   },
-  isIsoDate(str: string) {
-    return /\d{4}-\d{2}-\d{2}/.test(str) || /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(str);
-  },
-  deepCopy(obj: object) {
-    return fp.cloneDeep(obj);
-  },
-  debounce(fn: (...args: any) => void, wait = 100, immediate = false) {
-    let timer: any = null;
-    return (...args: any) => {
-      if (timer) {
-        clearTimeout(timer);
-      } else if (immediate) {
-        fn(...args);
-      }
-      timer = setTimeout(() => {
-        fn(...args);
-      }, wait);
-    };
-  },
-  parseSearchStringToArray(str: string) {
+  stringToArray(str: string) {
     if (!str) {
       return [];
     }
@@ -87,7 +61,7 @@ export default {
       .replace(/\s{2,}/g, ' ');
     return formatString.split(' ');
   },
-  open(path: string, target = '_blank') {
+  openUrl(path: string, target = '_blank') {
     const publicPath = process.env.VUE_APP_PUBLIC_PATH || '';
     if (path.includes('http') || path.includes(publicPath)) {
       window.open(path, target);
@@ -96,23 +70,12 @@ export default {
     const newPath = path.charAt(0) === '/' ? path.slice(1) : path;
     window.open(`${publicPath}${newPath}`, target);
   },
-  parseSeconds(seconds: number) {
-    const secPerMinute = 60;
-    const secPerHour = 60 * 60;
-    const hours = Math.floor(seconds / secPerHour);
-    const hourString = String(hours).padStart(2, '0');
-    const minutesLeft = seconds - hours * secPerHour;
-    const minutes = Math.floor(minutesLeft / secPerMinute);
-    const minuteString = String(minutes).padStart(2, '0');
-    const secondsCount = minutesLeft - minutes * secPerMinute;
-    const secondString = String(secondsCount).padStart(2, '0');
-    return {
-      hour: hourString,
-      minute: minuteString,
-      second: secondString,
-      toString() {
-        return `${hourString}:${minuteString}:${secondString}`;
-      },
-    };
+  toCurrency(price: number | string, decimalCount = 2, suffix = '') {
+    const priceNumber = Number(price);
+    if (Number.isNaN(priceNumber)) return null;
+    const priceArray = priceNumber.toFixed(decimalCount).split('.');
+    return `${Number(priceArray[0]).toLocaleString('en-US')}.${
+      priceArray[1] ? priceArray[1].padEnd(decimalCount, '0') : suffix
+    }`;
   },
 };
