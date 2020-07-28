@@ -1,6 +1,6 @@
 type IObject = { [key: string]: any };
 
-declare interface RouteMeta {
+interface RouteMeta {
   title: string;
   requireAuth?: boolean;
   keepAlive?: true | false;
@@ -8,7 +8,7 @@ declare interface RouteMeta {
   role?: 'admin' | 'user';
 }
 
-declare interface IRoute {
+interface IRoute {
   path: string;
   name?: string;
   component: any;

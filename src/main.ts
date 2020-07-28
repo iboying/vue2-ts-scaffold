@@ -6,6 +6,7 @@ import router from './router';
 import store from './store';
 import utils from './utils';
 import moment from 'moment';
+import '@/components/global';
 
 moment.locale('zh-cn');
 
