@@ -1,5 +1,3 @@
-import * as fp from 'lodash/fp';
-
 type func = (item: any) => string;
 
 export default {
