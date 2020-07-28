@@ -1,4 +1,4 @@
-type IObject = { [key: string]: any };
+type IObject = Record<string, any>;
 
 interface RouteMeta {
   title: string;

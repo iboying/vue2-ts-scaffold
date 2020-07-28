@@ -4,10 +4,10 @@
     HelloWorld(msg="Welcome to Your Vue.js App")
 </template>
 
-<script>
+<script lang="ts">
 import { Component, Vue } from 'vue-property-decorator';
 import { exampleStore } from '@/store/modules/example.store';
-import HelloWorld from '@/components/HelloWorld.vue';
+import HelloWorld from '@/components/home/HelloWorld.vue';
 
 @Component({
   components: {

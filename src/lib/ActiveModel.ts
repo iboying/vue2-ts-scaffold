@@ -5,7 +5,7 @@ import { isInteger, merge } from 'lodash';
 import { plural } from 'pluralize';
 
 type IdType = number | string;
-type IObject = { [key: string]: any };
+type IObject = Record<string, any>;
 type ModeType = 'default' | 'shallow' | 'single';
 
 export interface IParent {
