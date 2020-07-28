@@ -73,8 +73,7 @@ interface IModel {
  *  http://www.api.com/v2/finance/user/activities
  *  http://www.api.com + /v2 + /finance/user + /activities
  */
-export default class ActiveModel<T extends IModel = IModel, IResponse = {}>
-  implements IActiveModel {
+export default class ActiveModel<T extends IModel = IModel, IResponse = {}> implements IActiveModel {
   public request!: AxiosInstance;
   public baseUrl!: string;
   public rootPath = '/';
@@ -90,18 +89,7 @@ export default class ActiveModel<T extends IModel = IModel, IResponse = {}>
 
   constructor(config: IModelConfig = {}) {
     this.request = createRequestClient();
-    const {
-      baseUrl,
-      rootPath,
-      name,
-      namespace,
-      dataIndexKey,
-      pathIndexKey,
-      parents,
-      actions,
-      mode,
-      params,
-    } = config;
+    const { baseUrl, rootPath, name, namespace, dataIndexKey, pathIndexKey, parents, actions, mode, params } = config;
 
     if (baseUrl) {
       this.request.defaults.baseURL = baseUrl;
@@ -132,10 +120,7 @@ export default class ActiveModel<T extends IModel = IModel, IResponse = {}>
   }
 
   get indexPath() {
-    const parentPath = this.parents.reduce(
-      (path, parent) => `${path}/${parent.type}/${parent.id}`,
-      this.namespace,
-    );
+    const parentPath = this.parents.reduce((path, parent) => `${path}/${parent.type}/${parent.id}`, this.namespace);
     if (this.mode === 'single') {
       return `${parentPath}/${this.name}`;
     }

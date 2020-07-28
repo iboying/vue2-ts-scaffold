@@ -3,14 +3,7 @@ import store from '@/store';
 import diff from '@/utils/diff';
 import { AxiosRequestConfig } from 'axios';
 import { cloneDeep } from 'lodash/fp';
-import {
-  Action,
-  config,
-  getModule as getMod,
-  Module,
-  Mutation,
-  VuexModule,
-} from 'vuex-module-decorators';
+import { Action, config, getModule as getMod, Module, Mutation, VuexModule } from 'vuex-module-decorators';
 
 config.rawError = true;
 
@@ -53,9 +46,7 @@ function checkInit(model: IActiveModel) {
 function diffAttributes(originAttributeObjects: IObject[], currentAttributeObjects: IObject[]) {
   const originAttributeObjectIds = originAttributeObjects.map((o: any) => o.id);
   const currentAttributeObjectIds = currentAttributeObjects.map((o: any) => o.id);
-  const newObjects = currentAttributeObjects.filter(
-    (o: any) => !originAttributeObjectIds.includes(o.id),
-  );
+  const newObjects = currentAttributeObjects.filter((o: any) => !originAttributeObjectIds.includes(o.id));
   const deleteObjects = originAttributeObjects
     .filter((o: any) => !currentAttributeObjectIds.includes(o.id))
     .map((o: any) => ({
@@ -293,8 +284,7 @@ export class ActiveStore<IModel extends IModelRequired = IModelRequired> extends
   public SET_RECORDS(this: any, payload: IObject) {
     this.currentPage = payload.current_page || this.currentPage;
     this.totalPages = payload.total_pages || this.totalPages;
-    this.totalCount =
-      typeof payload.total_count === 'number' ? payload.total_count : this.totalCount;
+    this.totalCount = typeof payload.total_count === 'number' ? payload.total_count : this.totalCount;
     const records = cloneDeep(payload[this.model.dataIndexKey] || this.records);
     this.records = records.map((o: any, i: number) => ({ _index: i + 1, ...o }));
   }
@@ -302,12 +292,9 @@ export class ActiveStore<IModel extends IModelRequired = IModelRequired> extends
   public APPEND_RECORDS(this: any, payload: IObject) {
     this.currentPage = payload.current_page || this.currentPage;
     this.totalPages = payload.total_pages || this.totalPages;
-    this.totalCount =
-      typeof payload.total_count === 'number' ? payload.total_count : this.totalCount;
+    this.totalCount = typeof payload.total_count === 'number' ? payload.total_count : this.totalCount;
     if (this.currentPage === 1) {
-      this.records = payload[this.model.dataIndexKey]
-        ? cloneDeep(payload[this.model.dataIndexKey])
-        : this.records;
+      this.records = payload[this.model.dataIndexKey] ? cloneDeep(payload[this.model.dataIndexKey]) : this.records;
     } else {
       this.records = this.records.concat(cloneDeep(payload[this.model.dataIndexKey] || []));
     }
