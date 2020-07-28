@@ -7,11 +7,11 @@
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator';
 import { exampleStore } from '@/store/modules/example.store';
-import HelloWorld from '@/components/home/HelloWorld.vue';
+import ComHelloWorld from '@/components/home/ComHelloWorld.vue';
 
 @Component({
   components: {
-    HelloWorld,
+    ComHelloWorld,
   },
 })
 export default class Home extends Vue {

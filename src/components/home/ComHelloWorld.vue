@@ -7,7 +7,7 @@ h3.hello
 import { Component, Prop, Vue } from 'vue-property-decorator';
 
 @Component
-export default class HelloWorld extends Vue {
+export default class ComHelloWorld extends Vue {
   @Prop({ type: String }) private msg!: string;
 }
 </script>
