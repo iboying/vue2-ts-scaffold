@@ -4,13 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "vue-cli-service serve",
-    "build": "vue-cli-service build",
     "format": "pretty-quick",
     "test:unit": "vue-cli-service test:unit",
     "lint": "vue-cli-service lint --fix",
-    "deploy:test": "npm run lint && npm run build --mode development && node scripts/deploy.js",
-    "deploy:production": "npm run lint && npm run build && node scripts/deploy.js",
-    "deploy:all": "npm run deploy:test; npm run deploy:production"
+    "build:beta": "vue-cli-service build --mode beta",
+    "build:production": "vue-cli-service build",
+    "deploy:beta": "npm run lint && npm run build --mode development && node scripts/deploy.js",
+    "deploy:production": "npm run lint && npm run build && node scripts/deploy.js"
   },
   "dependencies": {
     "axios": "^0.19.2",

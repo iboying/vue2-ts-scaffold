@@ -3,7 +3,7 @@ import VueRouter from 'vue-router';
 
 Vue.use(VueRouter);
 
-const requireRoute = require.context('.', false, /\.route\.ts$/);
+const requireRoute = require.context('.', true, /\.route\.ts$/);
 const routes: IRoute[] = [];
 let errorRoutes: IRoute[] = [];
 

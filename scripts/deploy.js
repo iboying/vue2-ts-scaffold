@@ -6,7 +6,7 @@ const chalk = require('chalk');
 const localPath = 'dist/';
 const TARGET = process.env.npm_lifecycle_event;
 const targetOptionsMap = {
-  publish: [
+  'deploy:production': [
     {
       tag: '正式版',
       username: 'web',
@@ -16,7 +16,7 @@ const targetOptionsMap = {
       remotePath: '/project/path',
     },
   ],
-  deploy: [
+  'deploy:beta': [
     {
       tag: '测试版',
       username: 'web',

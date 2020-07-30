@@ -1,0 +1,60 @@
+image: chenkang0503/front-end-env:latest
+
+stages:
+  - test
+  - deploy
+
+install:
+  stage: test
+  tags:
+    - web
+  cache:
+    key: ${CI_PROJECT_ID}
+    paths:
+      - node_modules
+  script:
+    - yarn config set registry https://registry.npm.taobao.org
+    - yarn install
+    - yarn run lint
+
+.deploy_config: &deploy_config
+  stage: deploy
+  tags:
+    - web
+  cache:
+    key: ${CI_PROJECT_ID}
+    policy: pull
+    paths:
+      - node_modules
+  before_script:
+    - mkdir -p ~/.ssh
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
+    - chmod -R 600 ~/.ssh
+    - echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+    - if [[ $PROJECT_PATH != *$CI_PROJECT_NAME* ]]; then false; fi;
+    - ssh "$WEB_HOST" "cd $PROJECT_PATH || exit"
+
+deploy_beta:
+  <<: *deploy_config
+  when: manual
+  environment:
+    name: Beta
+    url: http://www.domain.cn/beta
+  only:
+    - develop
+  script:
+    - npm run build:beta
+    - rsync -avI --rsh=ssh dist/ "$WEB_HOST:$PROJECT_PATH/$BETA_FOLDER"
+
+deploy_production:
+  <<: *deploy_config
+  when: manual
+  environment:
+    name: Production
+    url: http://www.domain.cn
+  only:
+    - master
+  script:
+    - npm run build:production
+    - rsync -avI --rsh=ssh dist/ "$WEB_HOST:$PROJECT_PATH/$PRODUCTION_FOLDER"
