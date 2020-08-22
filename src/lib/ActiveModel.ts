@@ -1,5 +1,5 @@
 import createRequestClient from '@/utils/request';
-import { AxiosInstance, AxiosRequestConfig } from 'axios';
+import { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { snakeCase } from 'change-case';
 import { isInteger, merge } from 'lodash';
 import { plural } from 'pluralize';
@@ -18,6 +18,9 @@ interface IAction {
   method: 'get' | 'post' | 'patch' | 'put' | 'delete';
   on: 'member' | 'collection';
 }
+
+type IResponse<T, K extends string> = { [key in K]: T[] };
+type IndexResponse<T, K extends string> = IResponse<T, K> & IIndex;
 
 export interface IActiveModel {
   baseUrl: string;
@@ -73,7 +76,7 @@ interface IModel {
  *  http://www.api.com/v2/finance/user/activities
  *  http://www.api.com + /v2 + /finance/user + /activities
  */
-export default class ActiveModel<T extends IModel = IModel, IResponse = {}> implements IActiveModel {
+export default class ActiveModel<T extends IModel = IModel, K extends string = 'records'> implements IActiveModel {
   public request!: AxiosInstance;
   public baseUrl!: string;
   public rootPath = '/';
@@ -100,7 +103,7 @@ export default class ActiveModel<T extends IModel = IModel, IResponse = {}> impl
     this.namespace = namespace || this.namespace;
     const modelName = name || this.constructor.name;
     this.name = snakeCase(modelName);
-    this.dataIndexKey = dataIndexKey || plural(this.name);
+    this.dataIndexKey = dataIndexKey || 'records';
     this.pathIndexKey = pathIndexKey || plural(this.name);
     this.parents = parents || [];
     this.actions = actions || [];
@@ -149,10 +152,10 @@ export default class ActiveModel<T extends IModel = IModel, IResponse = {}> impl
    * index
    * 模型列表接口
    */
-  public index(params?: object, config?: AxiosRequestConfig) {
-    return this.request.get<IResponse & IIndex>(this.indexPath, {
+  public index(params?: object, config?: AxiosRequestConfig): Promise<AxiosResponse<IndexResponse<T, K>>> {
+    return this.request.get<IndexResponse<T, K>>(this.indexPath, {
       ...config,
-      params: merge(this.params, params),
+      params: merge({ ...this.params }, params),
     });
   }
 
@@ -160,7 +163,7 @@ export default class ActiveModel<T extends IModel = IModel, IResponse = {}> impl
    * find
    * 模型详情接口
    */
-  public find(id?: IdType, config?: AxiosRequestConfig) {
+  public find(id?: IdType, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {
     return this.request.get<T>(this.getActionPath(id), config);
   }
 
@@ -168,7 +171,7 @@ export default class ActiveModel<T extends IModel = IModel, IResponse = {}> impl
    * create
    * 创建记录
    */
-  public create(payload: T, config?: AxiosRequestConfig) {
+  public create(payload: T, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {
     return this.request.post<T>(
       this.indexPath,
       {
@@ -182,7 +185,7 @@ export default class ActiveModel<T extends IModel = IModel, IResponse = {}> impl
    * update
    * 更新记录
    */
-  public update(instance: T, config?: AxiosRequestConfig) {
+  public update(instance: T, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {
     return this.request.patch(
       this.getActionPath(instance.id),
       {
@@ -196,12 +199,12 @@ export default class ActiveModel<T extends IModel = IModel, IResponse = {}> impl
    * delete
    * 删除记录
    */
-  public delete(id?: IdType, config?: AxiosRequestConfig) {
+  public delete(id?: IdType, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {
     return this.request.delete(this.getActionPath(id), config);
   }
 
   /**
-   * 出发自定义方法
+   * 触发自定义方法
    */
   public sendCollectionAction(actionName: string, config?: AxiosRequestConfig) {
     const action: IAction = this.collectionActionMap[actionName];
@@ -217,7 +220,7 @@ export default class ActiveModel<T extends IModel = IModel, IResponse = {}> impl
   }
 
   /**
-   * 出发自定义方法
+   * 触发自定义方法
    */
   public sendMemberAction(id: IdType, actionName: string, config?: AxiosRequestConfig) {
     const action: IAction = this.memberActionMap[actionName];

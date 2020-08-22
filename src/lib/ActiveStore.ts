@@ -8,7 +8,7 @@ import { Action, config, getModule as getMod, Module, Mutation, VuexModule } fro
 config.rawError = true;
 
 interface IModelRequired {
-  id?: number | string | null | undefined;
+  id?: number | string;
   noCompare?: boolean;
 }
 interface IParams {
@@ -35,6 +35,8 @@ interface ModuleOptions {
   store?: any;
   dynamic?: boolean;
   namespaced?: boolean;
+  syncModuleNames?: string[]; // store 数据同步给其他的 module
+  autoSync?: boolean; // 是否开启自动同步，当 create、update、delete 的时候会同步其他模块数据
 }
 
 function checkInit(model: IActiveModel) {
@@ -71,9 +73,12 @@ function getDiffResourceAttributes(record: IObject) {
 }
 
 export class ActiveStore<IModel extends IModelRequired = IModelRequired> extends VuexModule {
-  private ActiveModel: any = null;
+  private _name = '';
+  private _syncModuleNames: string[] = [];
+  private _autoSync = false;
+
+  ActiveModel: any = null;
   model: IActiveModel = new ActiveModel();
-  // data
   perPage = 15;
   currentPage = 1;
   totalPages = 0;
@@ -81,16 +86,17 @@ export class ActiveStore<IModel extends IModelRequired = IModelRequired> extends
   records: IModel[] = [];
   record: IModel | IObject = {};
   parentMap: { [key: string]: IParent } = {};
-  // form
-  formData: IModel | IObject = {};
-  // control
   loading = false;
 
   @Action({})
   init(modelOrConfig?: IActiveModel | IModelConfig) {
     const ModelClass = this.ActiveModel;
+    if (this.context && !ModelClass) {
+      // Store register 阶段，无需处理
+      return;
+    }
     if (!ModelClass) {
-      throw new Error('\n\n 请使用 init 方法初始化 store. 确保 store 在声明时已关联模型。\n');
+      throw new Error('\n\n 请使用 init 方法初始化 store. 确保 store 在其方法调用之前已关联模型。\n');
     }
     if (modelOrConfig) {
       if (modelOrConfig instanceof ModelClass) {
@@ -135,7 +141,6 @@ export class ActiveStore<IModel extends IModelRequired = IModelRequired> extends
       this.context.commit('SET_LOADING', true);
       const res = await this.model.find(id);
       this.context.commit('SET_RECORD', res.data);
-      this.context.commit('SET_FORM_DATA', res.data);
       this.context.commit('SET_LOADING', false);
       return Promise.resolve(cloneDeep(res));
     } catch (error) {
@@ -145,13 +150,16 @@ export class ActiveStore<IModel extends IModelRequired = IModelRequired> extends
   }
 
   @Action({})
-  async create(formData: IModel) {
+  async create(formData: Partial<IModel>) {
     try {
       checkInit(this.model);
       this.context.commit('SET_LOADING', true);
       const { data } = await this.model.create(formData);
       this.context.commit('ADD_RECORD', data);
       this.context.commit('SET_LOADING', false);
+      if (this._autoSync) {
+        this.sync();
+      }
       return { data };
     } catch (error) {
       this.context.commit('SET_LOADING', false);
@@ -160,7 +168,7 @@ export class ActiveStore<IModel extends IModelRequired = IModelRequired> extends
   }
 
   @Action({})
-  async update(formData: IModel) {
+  async update(formData: Partial<IModel> & IModelRequired) {
     try {
       checkInit(this.model);
       this.context.commit('SET_LOADING', true);
@@ -188,6 +196,9 @@ export class ActiveStore<IModel extends IModelRequired = IModelRequired> extends
       await this.model.update(patchData);
       this.context.commit('UPDATE_RECORD', formData);
       this.context.commit('SET_LOADING', false);
+      if (this._autoSync) {
+        this.sync();
+      }
     } catch (error) {
       this.context.commit('SET_LOADING', false);
       throw error;
@@ -202,6 +213,9 @@ export class ActiveStore<IModel extends IModelRequired = IModelRequired> extends
       await this.model.update(formData);
       this.context.commit('UPDATE_RECORD', formData);
       this.context.commit('SET_LOADING', false);
+      if (this._autoSync) {
+        this.sync();
+      }
     } catch (error) {
       this.context.commit('SET_LOADING', false);
       throw error;
@@ -216,6 +230,9 @@ export class ActiveStore<IModel extends IModelRequired = IModelRequired> extends
       await this.model.delete(id);
       this.context.commit('DELETE_RECORD', id);
       this.context.commit('SET_LOADING', false);
+      if (this._autoSync) {
+        this.sync();
+      }
     } catch (error) {
       this.context.commit('SET_LOADING', false);
       throw error;
@@ -255,9 +272,7 @@ export class ActiveStore<IModel extends IModelRequired = IModelRequired> extends
   @Action({})
   async reset() {
     this.context.commit('SET_RECORD', {});
-    this.context.commit('SET_FORM_DATA', {});
     this.context.commit('SET_LOADING', false);
-
     this.context.commit('SET_RECORDS', {
       current_page: 1,
       total_pages: 1,
@@ -266,14 +281,32 @@ export class ActiveStore<IModel extends IModelRequired = IModelRequired> extends
     });
   }
 
+  @Action({})
+  async sync(moduleName?: string | string[]) {
+    moduleName = moduleName || this._syncModuleNames;
+    const names = Array.isArray(moduleName) ? moduleName : [moduleName];
+
+    names.forEach(module => {
+      if (store.hasModule(module) && module !== this._name) {
+        store.commit(`${module}/SET_RECORD`, this.record);
+        store.commit(`${module}/SET_RECORDS`, {
+          current_page: this.currentPage,
+          total_pages: this.totalPages,
+          total_count: this.totalCount,
+          [this.model.dataIndexKey || this.model.pathIndexKey]: this.records,
+        });
+        store.commit(`${module}/SET_PARAMS`, {
+          page: this.currentPage,
+          per_page: this.perPage,
+        });
+      }
+    });
+  }
+
   // =============== mutations ===============
   @Mutation
   public SET_RECORD(this: any, payload: IModel | IObject) {
     this.record = cloneDeep(payload);
-  }
-  @Mutation
-  public SET_FORM_DATA(this: any, payload: IModel | IObject) {
-    this.formData = cloneDeep(payload);
   }
   @Mutation
   public SET_PARAMS(this: any, payload: IObject = {}) {
@@ -345,5 +378,8 @@ export function ActiveModule(ModelClass: ConstructorOf<ActiveModel>, options: Mo
     const decorator = Module(Object.assign({ store, dynamic: true, namespaced: true }, options));
     decorator(StoreClass);
     StoreClass.state.ActiveModel = ModelClass;
+    StoreClass.state._syncModuleNames = options.syncModuleNames || [];
+    StoreClass.state._autoSync = !!options.autoSync;
+    StoreClass.state._name = options.name;
   };
 }
