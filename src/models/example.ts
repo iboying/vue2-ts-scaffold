@@ -5,11 +5,7 @@ export interface IExample {
   name: string;
 }
 
-interface IResponse {
-  examples: IExample[];
-}
-
-export class Example extends ActiveModel<IExample, IResponse> {
+export class Example extends ActiveModel<IExample> {
   // super 默认可以什么都不填，模型名称，indexKey, 表名，已在内部根据类名做了自动转换
   // class Member => { name: 'member', resource: 'members', indexKey: 'member' }
   // 外部实力化，可以传一个新的配置，注意合并之后传给 super

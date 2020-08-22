@@ -185,6 +185,43 @@ async fetchData() {
 | update | instance (资源实例)  | 更新资源     | patch /examples/:id  |
 | delete | id （资源 id）       | 删除资源     | delete /examples/:id |
 
+### 4. Store module 之间的数据同步功能
+
+> 此功能容易引起数据混乱，使用时，请确定你已经明白要实现的逻辑
+
+1. 通过 `syncModuleNames` 配置需要同步数据的其他 module
+
+```javascript
+@ActiveModule(Example, { name: 'ExampleStore', syncModuleNames: ['OtherModuleName'] })
+export class ExampleStore extends ActiveStore<IExample> {}
+```
+
+2. 业务中，通过 `store.sync` 方法进行手动同步
+
+```javascript
+exampleStore.sync(); // 同步默认配置的 modules
+exampleStore.sync('OtherModuleB'); // 自定义同步的 module, syncModuleNames 将会被忽略
+exampleStore.sync(['OtherModuleA', 'OtherModuleB']); // 自定义同步多个 module, syncModuleNames 将会被忽略
+```
+
+3. 开启自动同步
+
+使用 `autoSync` 开启，开启后，`create`、`update`、`delete` 方法会触发自动同步
+
+```javascript
+@ActiveModule(Example, { name: 'ExampleStore', syncModuleNames: ['OtherModuleName'], autoSync: true })
+export class ExampleStore extends ActiveStore<IExample> {}
+```
+
+4. 自动同步的数据
+
+- currentPage
+- perPage
+- totalPages
+- totalCount
+- record
+- records
+
 ## 九、代码规范
 
 ### 1. 目录接口
