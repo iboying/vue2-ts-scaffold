@@ -1,4 +1,6 @@
-# 项目使用说明
+# 基于 vue 和 TypeScript 的前端项目脚手架
+
+> 搭配脚手架命令行工具，可以实现业务的款速开发 https://github.com/iboying/boy-web-cli
 
 ## 基础命令
 
